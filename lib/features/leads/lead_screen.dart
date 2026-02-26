@@ -11,11 +11,7 @@ class LeadContent extends StatefulWidget {
 }
 
 class _LeadContentState extends State<LeadContent> {
-  bool showAddPanel = false;
-  bool showDetailPanel = false;
-
   String searchQuery = "";
-  Map<String, String>? selectedLead;
 
   final List<Map<String, String>> allLeads = [
     {
@@ -40,6 +36,39 @@ class _LeadContentState extends State<LeadContent> {
       "revenue": "50000",
       "assigned": "ASM - Raj",
     },
+    {
+      "date": "02 Mar 2026",
+      "name": "Apollo Clinic1",
+      "leadType": "New Client",
+      "leadSource": "Website",
+      "mobile": "9988776655",
+      "email": "apollo@gmail.com",
+      "city": "Surat",
+      "revenue": "50000",
+      "assigned": "ASM - Raj",
+    },
+    {
+      "date": "02 Mar 2026",
+      "name": "Apollo Clinic2",
+      "leadType": "New Client",
+      "leadSource": "Website",
+      "mobile": "9988776655",
+      "email": "apollo@gmail.com",
+      "city": "Surat",
+      "revenue": "50000",
+      "assigned": "ASM - Raj",
+    },
+    {
+      "date": "02 Mar 2026",
+      "name": "Apollo Clinic3",
+      "leadType": "New Client",
+      "leadSource": "Website",
+      "mobile": "9988776655",
+      "email": "apollo@gmail.com",
+      "city": "Surat",
+      "revenue": "50000",
+      "assigned": "ASM - Raj",
+    },
   ];
 
   List<Map<String, String>> get filteredLeads {
@@ -52,19 +81,9 @@ class _LeadContentState extends State<LeadContent> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double panelWidth =
-        screenWidth > 1200 ? 500 : screenWidth * 0.6;
+    final isMobile = MediaQuery.of(context).size.width < 800;
 
-    return Stack(
-      children: [
-
-        /// MAIN CONTENT
-        AnimatedPadding(
-          duration: const Duration(milliseconds: 300),
-          padding: EdgeInsets.only(
-              right: showAddPanel || showDetailPanel ? panelWidth + 20 : 20),
-          child: SingleChildScrollView(
+    return Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,10 +102,11 @@ class _LeadContentState extends State<LeadContent> {
                       text: "Add Lead",
                       icon: Icons.add,
                       onPressed: () {
-                        setState(() {
-                          showDetailPanel = false;
-                          showAddPanel = true;
-                        });
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const AddLeadScreen()),
+                        );
                       },
                     ),
                   ],
@@ -117,8 +137,16 @@ class _LeadContentState extends State<LeadContent> {
 
                 const SizedBox(height: 20),
 
-                /// TABLE
-                Container(
+                /// TABLE OR CARDS
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: isMobile
+                        ? Column(
+                            children: filteredLeads
+                                .map((lead) => _buildLeadCard(lead))
+                                .toList(),
+                          )
+                        : Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -136,35 +164,97 @@ class _LeadContentState extends State<LeadContent> {
                     ),
                   ),
                 ),
+                  ),
+                ),
               ],
             ),
+    );
+  }
+
+  Widget _buildLeadCard(Map<String, String> lead) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => LeadDetailScreen(lead: lead)),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    lead["name"] ?? "",
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      lead["leadType"] ?? "",
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.blue.shade700),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _cardRow(Icons.calendar_today, lead["date"]),
+              _cardRow(Icons.phone, lead["mobile"]),
+              _cardRow(Icons.email, lead["email"]),
+              _cardRow(Icons.location_city, lead["city"]),
+              const Divider(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "₹ ${lead["revenue"]}",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, color: Colors.green),
+                  ),
+                  Text(
+                    lead["assigned"] ?? "",
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
 
-        /// ADD LEAD PANEL
-        _buildRightPanel(
-          show: showAddPanel,
-          width: panelWidth,
-          title: "Add Lead",
-          onClose: () {
-            setState(() => showAddPanel = false);
-          },
-          child: AddLeadScreen(onClose: () => setState(() => showAddPanel = false)),
-        ),
-
-        /// DETAIL PANEL
-        _buildRightPanel(
-          show: showDetailPanel,
-          width: panelWidth,
-          title: selectedLead?["name"] ?? "",
-          onClose: () {
-            setState(() => showDetailPanel = false);
-          },
-          child: selectedLead == null
-              ? const SizedBox()
-              : _buildDetailContent(),
-        ),
-      ],
+  Widget _cardRow(IconData icon, String? value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value ?? "-",
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -197,11 +287,11 @@ class _LeadContentState extends State<LeadContent> {
   Widget _buildLeadRow(Map<String, String> lead) {
     return GestureDetector(
       onTap: () {
-        setState(() {
-          selectedLead = lead;
-          showAddPanel = false;
-          showDetailPanel = true;
-        });
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => LeadDetailScreen(lead: lead)),
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -222,157 +312,6 @@ class _LeadContentState extends State<LeadContent> {
           ],
         ),
       ),
-    );
-  }
-
-  // ========================
-  // DETAIL CONTENT
-  // ========================
-
-  Widget _buildDetailContent() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-    
-            _detailRow("Mobile", selectedLead!["mobile"]),
-            _detailRow("Email", selectedLead!["email"]),
-            _detailRow("City", selectedLead!["city"]),
-            _detailRow("Revenue", "₹ ${selectedLead!["revenue"]}"),
-            _detailRow("Assigned", selectedLead!["assigned"]),
-    
-            const SizedBox(height: 30),
-    
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _actionButton("Add Visit", Colors.blue, _openVisitDialog),
-                _actionButton("Follow-up", Colors.orange, _openFollowupDialog),
-                _actionButton("Convert to Opportunity", Colors.green, _openConvertDialog),
-                _actionButton("Disqualify", Colors.red, _openDisqualifyDialog),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ========================
-  // RIGHT PANEL BUILDER
-  // ========================
-
-  Widget _buildRightPanel({
-    required bool show,
-    required double width,
-    required String title,
-    required VoidCallback onClose,
-    required Widget child,
-  }) {
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 300),
-      right: show ? 0 : -width,
-      top: 0,
-      bottom: 0,
-      child: Material(
-        elevation: 16,
-        color: Colors.white,
-        child: SizedBox(
-          width: width,
-          child: Column(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Colors.grey)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(title,
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w600)),
-                    IconButton(
-                      onPressed: onClose,
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(child: child),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ========================
-  // UTILITIES
-  // ========================
-
-  Widget _detailRow(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          SizedBox(
-              width: 140,
-              child: Text(label,
-                  style:
-                      const TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text(value ?? "-")),
-        ],
-      ),
-    );
-  }
-
-  Widget _actionButton(
-      String label, Color color, VoidCallback onTap) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6),
-        ),
-      ),
-      onPressed: onTap,
-      child: Text(label),
-    );
-  }
-
-  void _openVisitDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => const VisitDialog(),
-    );
-  }
-
-  void _openFollowupDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => const FollowupDialog(),
-    );
-  }
-
-  void _openConvertDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const ConvertDialog(),
-    );
-  }
-
-  void _openDisqualifyDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const DisqualifyDialog(),
     );
   }
 }

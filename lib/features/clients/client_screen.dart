@@ -10,6 +10,8 @@ class ClientContent extends StatefulWidget {
 }
 
 class _ClientContentState extends State<ClientContent> {
+  String searchQuery = "";
+
   final List<Map<String, String>> clients = [
     {
       "name": "Apollo Hospital",
@@ -37,9 +39,20 @@ class _ClientContentState extends State<ClientContent> {
     },
   ];
 
+  List<Map<String, String>> get filteredClients {
+    return clients.where((client) {
+      return client["name"]!
+          .toLowerCase()
+          .contains(searchQuery.toLowerCase());
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    final isMobile = MediaQuery.of(context).size.width < 800;
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -66,24 +79,119 @@ class _ClientContentState extends State<ClientContent> {
           ),
           const SizedBox(height: 20),
 
-          /// TABLE
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: const [BoxShadow(blurRadius: 8, color: Colors.black12)],
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: 1100,
-                child: Column(
-                  children: [
-                    _buildHeaderRow(),
-                    ...clients.map((client) => _buildRow(client)),
-                  ],
+          /// SEARCH
+          SizedBox(
+            width: 350,
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                hintText: "Search Client...",
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          /// TABLE OR CARDS
+          Expanded(
+            child: SingleChildScrollView(
+              child: isMobile
+                  ? Column(
+                      children: filteredClients
+                          .map((client) => _buildClientCard(client))
+                          .toList(),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: 1100,
+                          child: Column(
+                            children: [
+                              _buildHeaderRow(),
+                              ...filteredClients
+                                  .map((client) => _buildClientRow(client)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClientCard(Map<String, String> client) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  client["name"] ?? "",
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    client["status"] ?? "",
+                    style:
+                        TextStyle(fontSize: 12, color: Colors.blue.shade700),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _cardRow(Icons.location_city, client["city"]),
+            _cardRow(Icons.business, client["model"]),
+            _cardRow(Icons.layers, client["vertical"]),
+            _cardRow(Icons.phone, client["mobile"]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _cardRow(IconData icon, String? value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value ?? "-",
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ),
         ],
@@ -99,18 +207,18 @@ class _ClientContentState extends State<ClientContent> {
       ),
       child: const Row(
         children: [
-          Expanded(flex: 2, child: Text("Client Name", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("City", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("Model", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("Vertical", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("Mobile", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("Status", style: TextStyle(fontWeight: FontWeight.w600))),
+          _HeaderCell("Client Name"),
+          _HeaderCell("City"),
+          _HeaderCell("Model"),
+          _HeaderCell("Vertical"),
+          _HeaderCell("Mobile"),
+          _HeaderCell("Status"),
         ],
       ),
     );
   }
 
-  Widget _buildRow(Map<String, String> item) {
+  Widget _buildClientRow(Map<String, String> item) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
@@ -118,14 +226,36 @@ class _ClientContentState extends State<ClientContent> {
       ),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text(item["name"]!)),
-          Expanded(child: Text(item["city"]!)),
-          Expanded(child: Text(item["model"]!)),
-          Expanded(child: Text(item["vertical"]!)),
-          Expanded(child: Text(item["mobile"]!)),
-          Expanded(child: Text(item["status"]!)),
+          _DataCell(item["name"]),
+          _DataCell(item["city"]),
+          _DataCell(item["model"]),
+          _DataCell(item["vertical"]),
+          _DataCell(item["mobile"]),
+          _DataCell(item["status"]),
         ],
       ),
     );
+  }
+}
+
+class _HeaderCell extends StatelessWidget {
+  final String text;
+  const _HeaderCell(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
+class _DataCell extends StatelessWidget {
+  final String? text;
+  const _DataCell(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(child: Text(text ?? "-"));
   }
 }

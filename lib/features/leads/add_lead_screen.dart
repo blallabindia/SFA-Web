@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AddLeadScreen extends StatefulWidget {
-  final VoidCallback onClose;
-  const AddLeadScreen({super.key, required this.onClose});
+  const AddLeadScreen({super.key});
 
   @override
   State<AddLeadScreen> createState() => _AddLeadScreenState();
@@ -27,9 +26,9 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      child: SingleChildScrollView(
+    return Scaffold(
+      appBar: AppBar(title: const Text("Add Lead")),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
@@ -184,11 +183,11 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
 
   void _saveLead() {
     if (_formKey.currentState!.validate()) {
-      widget.onClose();
+      Navigator.pop(context);
     }
   }
 
   void _saveDraft() {
-    widget.onClose();
+    Navigator.pop(context);
   }
 }

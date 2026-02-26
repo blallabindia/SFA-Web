@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'add_opportunity_screen.dart';
-import 'opportunity_detail_screen.dart';
 import '../../shared/widgets/primary_button.dart';
 
 class OpportunityContent extends StatefulWidget {
@@ -11,212 +10,188 @@ class OpportunityContent extends StatefulWidget {
 }
 
 class _OpportunityContentState extends State<OpportunityContent> {
-  bool showAddPanel = false;
-  bool showDetailPanel = false;
-  Map<String, String>? selectedOpportunity;
+  String searchQuery = "";
 
   final List<Map<String, String>> opportunities = [
     {
-      "name": "Dr. Sharma",
-      "mobile": "9876543210",
-      "email": "dr.sharma@test.com",
-      "city": "Ahmedabad",
-      "revenue": "50,000",
-      "assigned": "Self",
-      "stage": "Negotiation",
+      "topic": "Annual Maintenance Contract",
+      "account": "Apollo Hospital",
+      "stage": "Proposal",
+      "amount": "1,50,000",
       "closeDate": "15 Apr 2026",
-      "probability": "80%",
-      "competitor": "None",
+      "owner": "Self",
     },
     {
-      "name": "Apollo Clinic",
-      "mobile": "9988776655",
-      "email": "contact@apollo.com",
-      "city": "Surat",
-      "revenue": "1,20,000",
-      "assigned": "ASM - Raj",
-      "stage": "Proposal Sent",
-      "closeDate": "30 Mar 2026",
-      "probability": "60%",
-      "competitor": "Thyrocare",
+      "topic": "New Lab Setup",
+      "account": "Dr. Lal PathLabs",
+      "stage": "Negotiation",
+      "amount": "5,00,000",
+      "closeDate": "01 May 2026",
+      "owner": "ASM - Raj",
+    },
+    {
+      "topic": "Software Upgrade",
+      "account": "Sterling Hospital",
+      "stage": "Qualification",
+      "amount": "75,000",
+      "closeDate": "20 Mar 2026",
+      "owner": "Self",
     },
   ];
 
+  List<Map<String, String>> get filteredOpportunities {
+    return opportunities.where((opp) {
+      return opp["topic"]!.toLowerCase().contains(searchQuery.toLowerCase()) ||
+             opp["account"]!.toLowerCase().contains(searchQuery.toLowerCase());
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double panelWidth = screenWidth > 1200 ? 500 : screenWidth * 0.6;
+    final isMobile = MediaQuery.of(context).size.width < 800;
 
-    return Stack(
-      children: [
-        AnimatedPadding(
-          duration: const Duration(milliseconds: 300),
-          padding: EdgeInsets.only(right: (showAddPanel || showDetailPanel) ? panelWidth + 20 : 20),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// HEADER
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Opportunities",
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-                    ),
-                    PrimaryButton(
-                      text: "Add Opportunity",
-                      icon: Icons.add,
-                      onPressed: () {
-                        setState(() {
-                          showDetailPanel = false;
-                          showAddPanel = true;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                /// TABLE
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [BoxShadow(blurRadius: 8, color: Colors.black12)],
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: 1300,
-                      child: Column(
-                        children: [
-                          _buildHeaderRow(),
-                          ...opportunities.map((opp) => _buildRow(opp)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Opportunities", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
+              PrimaryButton(
+                text: "Add Opportunity",
+                icon: Icons.add,
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddOpportunityScreen()));
+                },
+              ),
+            ],
           ),
-        ),
-
-        /// ADD PANEL
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 300),
-          right: showAddPanel ? 0 : -panelWidth,
-          top: 0,
-          bottom: 0,
-          child: Material(
-            elevation: 16,
-            color: Colors.white,
-            child: SizedBox(
-              width: panelWidth,
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.grey)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Add Opportunity",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                        IconButton(
-                          onPressed: () => setState(() => showAddPanel = false),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(child: AddOpportunityScreen(
-                    onClose: () => setState(() => showAddPanel = false),
-                  )),
-                ],
+          const SizedBox(height: 20),
+          
+          // Search
+          SizedBox(
+            width: 350,
+            child: TextField(
+              onChanged: (val) => setState(() => searchQuery = val),
+              decoration: InputDecoration(
+                hintText: "Search Opportunity...",
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
           ),
-        ),
+          const SizedBox(height: 20),
 
-        /// DETAIL PANEL
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 300),
-          right: showDetailPanel ? 0 : -panelWidth,
-          top: 0,
-          bottom: 0,
-          child: Material(
-            elevation: 16,
-            color: Colors.white,
-            child: SizedBox(
-              width: panelWidth,
-              child: selectedOpportunity == null
-                  ? const SizedBox()
-                  : OpportunityDetailScreen(
-                      opportunity: selectedOpportunity!,
-                      onClose: () => setState(() => showDetailPanel = false),
+          // List
+          Expanded(
+            child: SingleChildScrollView(
+              child: isMobile 
+                ? Column(children: filteredOpportunities.map((opp) => _buildOpportunityCard(opp)).toList())
+                : Container(
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: 1100,
+                        child: Column(
+                          children: [
+                            _buildHeaderRow(),
+                            ...filteredOpportunities.map((opp) => _buildOpportunityRow(opp)),
+                          ],
+                        ),
+                      ),
                     ),
+                  ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOpportunityCard(Map<String, String> item) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(item["topic"] ?? "", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
+                  child: Text(item["stage"] ?? "", style: TextStyle(fontSize: 12, color: Colors.blue.shade700)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(item["account"] ?? "", style: TextStyle(fontSize: 14, color: Colors.grey.shade700, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 12),
+            _cardRow(Icons.currency_rupee, item["amount"]),
+            _cardRow(Icons.calendar_today, item["closeDate"]),
+            _cardRow(Icons.person, item["owner"]),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _cardRow(IconData icon, String? value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey),
+          const SizedBox(width: 8),
+          Expanded(child: Text(value ?? "-", style: const TextStyle(fontSize: 14, color: Colors.black87))),
+        ],
+      ),
     );
   }
 
   Widget _buildHeaderRow() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey)),
-      ),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey))),
       child: const Row(
         children: [
-          Expanded(flex: 2, child: Text("Name", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("Mobile", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 2, child: Text("Email", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("City", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("Exp. Revenue", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("Assigned", style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(flex: 2, child: Text("Topic", style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(flex: 2, child: Text("Account", style: TextStyle(fontWeight: FontWeight.w600))),
           Expanded(child: Text("Stage", style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(child: Text("Amount", style: TextStyle(fontWeight: FontWeight.w600))),
           Expanded(child: Text("Close Date", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("Prob. %", style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(child: Text("Competitor", style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(child: Text("Owner", style: TextStyle(fontWeight: FontWeight.w600))),
         ],
       ),
     );
   }
 
-  Widget _buildRow(Map<String, String> item) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedOpportunity = item;
-          showAddPanel = false;
-          showDetailPanel = true;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey)),
-        ),
-        child: Row(
-          children: [
-            Expanded(flex: 2, child: Text(item["name"]!)),
-            Expanded(child: Text(item["mobile"]!)),
-            Expanded(flex: 2, child: Text(item["email"]!)),
-            Expanded(child: Text(item["city"]!)),
-            Expanded(child: Text("₹ ${item["revenue"]}")),
-            Expanded(child: Text(item["assigned"]!)),
-            Expanded(child: Text(item["stage"]!)),
-            Expanded(child: Text(item["closeDate"]!)),
-            Expanded(child: Text(item["probability"]!)),
-            Expanded(child: Text(item["competitor"]!)),
-          ],
-        ),
+  Widget _buildOpportunityRow(Map<String, String> item) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey))),
+      child: Row(
+        children: [
+          Expanded(flex: 2, child: Text(item["topic"] ?? "-")),
+          Expanded(flex: 2, child: Text(item["account"] ?? "-")),
+          Expanded(child: Text(item["stage"] ?? "-")),
+          Expanded(child: Text("₹ ${item["amount"]}")),
+          Expanded(child: Text(item["closeDate"] ?? "-")),
+          Expanded(child: Text(item["owner"] ?? "-")),
+        ],
       ),
     );
   }
